@@ -1,0 +1,16 @@
+{
+  "scripts": {
+    "start": "npx tsx --env-file=.env --watch src/main.ts",
+    "seed": "npx tsx src/seed_database.ts"
+  },
+  "dependencies": {
+    "@types/express": "^5.0.2",
+    "@types/node": "^22.15.29",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "express-session": "^1.18.1",
+    "jsonwebtoken": "^9.0.2",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  }
+}
