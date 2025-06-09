@@ -5,6 +5,7 @@
   },
   "dependencies": {
     "@types/express": "^5.0.2",
+    "@types/express-session": "^1.18.2",
     "@types/node": "^22.15.29",
     "cors": "^2.8.5",
     "express": "^5.1.0",
