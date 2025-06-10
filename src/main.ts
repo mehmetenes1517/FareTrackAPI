@@ -1,17 +1,19 @@
 import express from "express"
 import cors from "cors"
-import { LoginService } from "./Services/login.service";
 import { WalletService } from "./Services/wallet.service";
 import { UserRouter } from "./Routers/user.router";
 import session from "express-session";
+import { DriverRouter } from "./Routers/driver.router";
+import { DriverLoginService } from "./Services/driver.login.service";
+import { UserLoginService } from "./Services/user.login.service";
 const app=express();
 
 
 
-const user_router=new UserRouter(
-                                    new LoginService(),
-                                    new WalletService()
-                                );
+const user_router=new UserRouter(new UserLoginService(),new WalletService());
+const driver_router=new DriverRouter(new DriverLoginService());
+
+
 
 app.use(express.json());
 app.use(cors({
@@ -29,5 +31,5 @@ app.use(session({
 
 
 app.use("/UserAPI",user_router.GetRouter());
-
+app.use("/DriverAPI",driver_router.GetRouter());
 app.listen(process.env.PORT,()=>console.log(`Server is listening port ${process.env.PORT}`))

@@ -4,7 +4,7 @@ import { createHash } from "crypto";
 import { User } from "../Models/user.model";
 import { Result } from "../Models/result.model";
 
-export class LoginService{
+export class UserLoginService{
     private db:Database;
     constructor(){
         this.SetDB();

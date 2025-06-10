@@ -1,5 +1,5 @@
 import express , { Request, Response, Router } from "express";
-import { LoginService } from "../Services/login.service";
+import { UserLoginService } from "../Services/user.login.service";
 import { WalletService } from "../Services/wallet.service";
 import { Result } from "../Models/result.model";
 import { User } from "../Models/user.model";
@@ -7,10 +7,10 @@ import { Wallet } from "../Models/wallet.model";
 import { createHash } from "crypto";
 
 export class UserRouter{
-    private loginservice:LoginService;
+    private loginservice:UserLoginService;
     private walletservice:WalletService;
     private router:Router;
-    constructor(loginservice:LoginService,walletservice:WalletService){
+    constructor(loginservice:UserLoginService,walletservice:WalletService){
         this.loginservice=loginservice;
         this.walletservice=walletservice;
         this.router=express.Router();
