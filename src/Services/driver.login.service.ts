@@ -133,7 +133,26 @@ export class DriverLoginService{
                 }
 
             }else{
-                return new Promise(e=>e({success:false,value:{} as Driver}));
+                password=createHash("sha512").update(password).digest("hex");
+                await this.db.exec(`
+                    UPDATE 
+                    drivers 
+
+                    SET  
+                    username='${username}' ,
+                    password='${password}' ,
+                    email='${email}' ,
+                    busid='${busid}'
+
+                    WHERE 
+                    id=${id};`);
+
+                let driver : Result<Driver> =await this.FindOneID(id);
+                if(driver.success){
+                    return new Promise(e=>e({success:true,value: driver.value}));
+                }else{
+                    return new Promise(e=>e({success:false,value:{} as Driver}));
+                }
             }
         }else{
             return new Promise(e=>e({success:false,value:{} as Driver}));
