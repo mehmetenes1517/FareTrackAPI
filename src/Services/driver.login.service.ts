@@ -76,14 +76,14 @@ export class DriverLoginService{
         let drivers:Driver[]=await this.db.all(`SELECT * FROM drivers WHERE busid='${busid}'`)
         return new Promise(e=>e({success:true,value:drivers}));
     }
-    async AddOne(companyid:number,username:string,email:string,password:string,busid:string): Promise<Result<Driver>>{
+    async AddOne(companyid:number,isactive:boolean,username:string,email:string,password:string,busid:string): Promise<Result<Driver>>{
         let username_:Result<Driver>=await this.FindOneUsername(username);
         let email_:Result<Driver>=await this.FindOneEmail(email);
         let busid_:Result<Driver>=await this.FindOneEmail(busid);
         if(typeof username_ !="undefined" && typeof email_ !="undefined" && typeof busid_ !="undefined"){
 
             password=createHash("sha512").update(password).digest("hex");
-            await this.db.exec(`INSERT INTO drivers(username,email,password,bus_id) VALUES(${companyid},'${username}','${email}','${password}','${busid}');`);
+            await this.db.exec(`INSERT INTO drivers(companyid,isactive,username,email,password,busid) VALUES(${companyid},${isactive},'${username}','${email}','${password}','${busid}');`);
             let driver_result:Result<Driver>=await this.FindOneUsername(username);
             if(driver_result.success){    
                 return new Promise(e=>e({success:true,value:driver_result.value}));
@@ -105,57 +105,51 @@ export class DriverLoginService{
             return new Promise(e=>e({success:false,value:{} as Driver}));
         }
     }
-    async UpdateOne(id:number,username:string,email:string,password:string,busid:string):Promise<Result<Driver>>{
+    async UpdateOne(id:number,companyid:number,isactive:boolean,username:string,email:string,password:string,busid:string):Promise<Result<Driver>>{
+        let user_:Result<Driver>= await this.FindOneID(id);
         let username_:Result<Driver>=await this.FindOneUsername(username);
         let email_:Result<Driver>=await this.FindOneEmail(email);
         let busid_:Result<Driver>=await this.FindOneBusid(username);
-        if(username_.success && email_.success && busid_.success){
-            if(username_.value.id!=id && email_.value.id!=id && busid_.value.id!=id){
-                password=createHash("sha512").update(password).digest("hex");
-                await this.db.exec(`
-                    UPDATE 
-                    drivers 
-
-                    SET  
-                    username='${username}' ,
-                    password='${password}' ,
-                    email='${email}' ,
-                    busid='${busid}'
-
-                    WHERE 
-                    id=${id};`);
-
-                let driver : Result<Driver> =await this.FindOneID(id);
-                if(driver.success){
-                    return new Promise(e=>e({success:true,value: driver.value}));
-                }else{
-                    return new Promise(e=>e({success:false,value:{} as Driver}));
-                }
-
-            }else{
-                password=createHash("sha512").update(password).digest("hex");
-                await this.db.exec(`
-                    UPDATE 
-                    drivers 
-
-                    SET  
-                    username='${username}' ,
-                    password='${password}' ,
-                    email='${email}' ,
-                    busid='${busid}'
-
-                    WHERE 
-                    id=${id};`);
-
-                let driver : Result<Driver> =await this.FindOneID(id);
-                if(driver.success){
-                    return new Promise(e=>e({success:true,value: driver.value}));
-                }else{
-                    return new Promise(e=>e({success:false,value:{} as Driver}));
-                }
-            }
-        }else{
+        if(!user_.success){
             return new Promise(e=>e({success:false,value:{} as Driver}));
+        }
+        else if(username_.success && username_.value.id!=id || email_.success && email_.value.id!=id || busid_.success && busid_.value.id!=id){
+            return new Promise(e=>e({success:false,value:{} as Driver}));
+        }else{
+            await this.db.exec(`UPDATE drivers 
+                SET 
+                companyid=${companyid},
+                isactive=${isactive},
+                username='${username}',
+                password='${password}',
+                email='${email}',
+                busid='${busid}' 
+                WHERE id=${id}`);
+            let updated_driver:Result<Driver>=await this.FindOneID(id);
+            if(updated_driver.success){
+                return new Promise(e=>e({success:true,value:updated_driver.value}));
+            }else{
+                return new Promise(e=>e({success:false,value:{} as Driver}));
+            }
+        }
+
+    }
+    async ActivateOne(id:number):Promise<Result<boolean>>{
+        let driver:Result<Driver>=await this.FindOneID(id);
+        if(driver.success){
+            await this.db.exec(`UPDATE drivers SET isactive=1 WHERE id=${id}`);
+            return new Promise(e=>e({success:true,value:true}));
+        }else{
+            return new Promise(e=>e({success:false,value:false}));
+        }
+    }
+    async DeactivateOne(id:number):Promise<Result<boolean>>{
+        let driver:Result<Driver>=await this.FindOneID(id);
+        if(driver.success){
+            await this.db.exec(`UPDATE drivers SET isactive=0 WHERE id=${id}`);
+            return new Promise(e=>e({success:true,value:true}));
+        }else{
+            return new Promise(e=>e({success:false,value:false}));
         }
     }
 }

@@ -31,10 +31,21 @@ const main=async()=>{
         (
         id INTEGER NOT NULL PRIMARY KEY,
         companyid INTEGER NOT NULL ,
+        isactive BIT NOT NULL,
         username TEXT NOT NULL, 
         email TEXT NOT NULL, 
         password TEXT NOT NULL, 
         busid TEXT NOT NULL 
+    );`);
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS companies
+        (
+        id INTEGER NOT NULL PRIMARY KEY,
+        companyname TEXT NOT NULL ,
+        username TEXT NOT NULL, 
+        password TEXT NOT NULL, 
+        email TEXT NOT NULL, 
+        phone TEXT NOT NULL 
     );`);
 }
 main();

@@ -24,10 +24,12 @@ export class DriverRouter{
             if(driver_result.success){
                 
                 password=createHash("sha512").update(password).digest("hex");
+                console.log(driver_result.value.password);
+                console.log(password);
                 if(driver_result.value.password==password){
 
-                    (req.session as any).username=username;
-                    (req.session as any).userid=driver_result.value.id;
+                    (req.session as any).drivername=username;
+                    (req.session as any).driverid=driver_result.value.id;
 
                     res.status(200).send("User Logged in");
                     return;
@@ -41,7 +43,45 @@ export class DriverRouter{
                 return;
             }
         });
-
+        this.router.put("/activate",async (req:Request,res:Response)=>{
+            let {drivername,driverid} = req.session as any;
+            if(drivername && driverid){
+                let res_activation:Result<boolean>=await this.loginservice.ActivateOne(driverid);
+                if(res_activation.success){
+                    res.status(200).send("OK");
+                }else{
+                    res.status(401).send("Authorization Required");
+                }
+            }else{
+                res.status(401).send("Authorization Required");
+            }
+        });
+        this.router.put("/deactivate",async (req:Request,res:Response)=>{
+            let {drivername,driverid} = req.session as any;
+            if(drivername && driverid){
+                let res_activation:Result<boolean>=await this.loginservice.DeactivateOne(driverid);
+                if(res_activation.success){
+                    res.status(200).send("OK");
+                }else{
+                    res.status(401).send("Authorization Required");
+                }
+            }else{
+                res.status(401).send("Authorization Required");
+            }
+        });
+       this.router.get("/getdriver",async (req:Request,res:Response)=>{
+            let {driverid} = req.session as any;
+            if(driverid){   
+                let driver_:Result<Driver>=await this.loginservice.FindOneID(driverid);
+                if(driver_.success){
+                    res.status(200).json(driver_.value);
+                }else{
+                    res.status(401).send("There is no such a user");
+                }
+            }else{
+                res.status(401).send("Authorization Required");
+            }
+        });
     }
 
 

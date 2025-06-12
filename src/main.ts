@@ -6,13 +6,15 @@ import session from "express-session";
 import { DriverRouter } from "./Routers/driver.router";
 import { DriverLoginService } from "./Services/driver.login.service";
 import { UserLoginService } from "./Services/user.login.service";
+import { CompanyRouter } from "./Routers/company.router";
+import { CompanyLoginService } from "./Services/company.login.service";
 const app=express();
 
 
 
 const user_router=new UserRouter(new UserLoginService(),new WalletService());
 const driver_router=new DriverRouter(new DriverLoginService());
-
+const company_router=new CompanyRouter(new CompanyLoginService(),new DriverLoginService());
 
 
 app.use(express.json());
@@ -32,4 +34,7 @@ app.use(session({
 
 app.use("/UserAPI",user_router.GetRouter());
 app.use("/DriverAPI",driver_router.GetRouter());
+app.use("/CompanyAPI",company_router.GetRouter());
+
+
 app.listen(process.env.PORT,()=>console.log(`Server is listening port ${process.env.PORT}`))

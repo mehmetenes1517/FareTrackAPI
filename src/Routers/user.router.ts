@@ -58,10 +58,8 @@ export class UserRouter{
         });
 
         this.router.put("/updateuser",async(req:Request,res:Response)=>{
-            let {id,username,password,email,phone}=req.body;
-            console.log((req.session as any).userid);
-            console.log((req.session as any).username);
-            if(((req.session as any).userid && (req.session as any).username) && (id==(req.session as any).userid) ){
+            let {username,password,email,phone}=req.body;
+            if(((req.session as any).userid && (req.session as any).username)){
 
                 let update_result:Result<User>=await this.loginservice.UpdateOne((req.session as any).userid,username,password,email,phone);
                 

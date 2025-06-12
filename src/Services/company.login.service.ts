@@ -2,6 +2,7 @@ import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { Result } from "../Models/result.model";
 import { Company } from "../Models/company.model";
+import { createHash } from "crypto";
 export class CompanyLoginService{
     private db:Database;
     constructor(){
@@ -18,7 +19,7 @@ export class CompanyLoginService{
         if(typeof company == "undefined"){
             return new Promise(e=>e({success:false,value:{} as Company}));
         }else{
-            return new Promise(e=>e({success:false,value:company }));
+            return new Promise(e=>e({success:true,value:company }));
         }
     }
     async FindOneCompanyname(companyname:string):Promise<Result<Company>>{
@@ -26,7 +27,7 @@ export class CompanyLoginService{
         if(typeof company == "undefined"){
             return new Promise(e=>e({success:false,value:{} as Company}));
         }else{
-            return new Promise(e=>e({success:false,value:company }));
+            return new Promise(e=>e({success:true,value:company }));
         }
     }
     async FindOneUsername(username:string):Promise<Result<Company>>{
@@ -34,7 +35,7 @@ export class CompanyLoginService{
         if(typeof company == "undefined"){
             return new Promise(e=>e({success:false,value:{} as Company}));
         }else{
-            return new Promise(e=>e({success:false,value:company }));
+            return new Promise(e=>e({success:true,value:company }));
         }
     }
     async FindOneEmail(email:string):Promise<Result<Company>>{
@@ -42,7 +43,7 @@ export class CompanyLoginService{
         if(typeof company == "undefined"){
             return new Promise(e=>e({success:false,value:{} as Company}));
         }else{
-            return new Promise(e=>e({success:false,value:company }));
+            return new Promise(e=>e({success:true,value:company }));
         }
     }
     async FindOnePhone(phone:string):Promise<Result<Company>>{
@@ -50,7 +51,7 @@ export class CompanyLoginService{
         if(typeof company == "undefined"){
             return new Promise(e=>e({success:false,value:{} as Company}));
         }else{
-            return new Promise(e=>e({success:false,value:company }));
+            return new Promise(e=>e({success:true,value:company }));
         }
     }
     async AddOne(companyname:string,username:string,password:string,email:string,phone:string):Promise<Result<Company>>{
@@ -61,12 +62,13 @@ export class CompanyLoginService{
         let phone_:Result<Company>=await this.FindOnePhone(phone);
 
         if(!company_.success && !username_.success && !email_.success && !phone_.success){
+            password=createHash("sha512").update(password).digest("hex");
             await this.db.exec(`INSERT INTO companies (companyname,username,password,email,phone) VALUES('${companyname}','${username}','${password}','${email}','${phone}');`);
             let cmp:Result<Company>=await this.FindOneUsername(username);
             if(cmp.success){
                 return new Promise(e=>e({success:true,value:cmp.value}));
             }else{
-                return new Promise(e=>e({success:false,value:{}as Company}));
+                return new Promise(e=>e({success:false,value:{} as Company}));
             }
         }else{
             return new Promise(e=>e({success:false,value:{}as Company}));
@@ -100,13 +102,12 @@ export class CompanyLoginService{
                     
                 }else{
                     
-                    return new Promise(e=>e({success:true,value:{} as Company}));
+                    return new Promise(e=>e({success:false,value:{} as Company}));
                 }
             }
             else{
                 return new Promise(e=>e({success:false,value:{}as Company}));
             }
-
         }else{
             await this.db.exec(`UPDATE companies SET companyname='${companyname}',username='${username}', password='${password}', email='${email}' , phone='${phone}' WHERE id='${id}';`);
             let updated_:Result<Company> = await this.FindOneID(id);
@@ -115,7 +116,7 @@ export class CompanyLoginService{
                 
             }else{
                 
-                return new Promise(e=>e({success:true,value:{} as Company}));
+                return new Promise(e=>e({success:false,value:{} as Company}));
             }
         }
     }
