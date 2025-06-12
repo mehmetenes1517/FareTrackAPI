@@ -32,15 +32,14 @@ export class UserRouter{
 
                 res.status(200).json("User Has Been Created");
             }else{
-                res.status(500).json("User Cannot Be Created");
+                res.status(401).json("User Cannot Be Created");
             }
         });
-        
-
         this.router.delete("/deleteuser",async (req:Request,res:Response)=>{
-            if((req.session as any).userid){
-                let user:Result<User>=await this.loginservice.DeleteOne((req.session as any).userid);
-                let wallet:Result<Wallet>=await this.walletservice.DeleteOne((req.session as any).userid);
+            let {userid}=(req.session as any);
+            if(userid){
+                let user:Result<User>=await this.loginservice.DeleteOne(userid);
+                let wallet:Result<Wallet>=await this.walletservice.DeleteOne(userid);
                 
                 if(user.success && wallet.success){
                     res.status(200).json(
@@ -56,11 +55,9 @@ export class UserRouter{
                 res.status(401).json("Authorization Required");
             }
         });
-
         this.router.put("/updateuser",async(req:Request,res:Response)=>{
-            let {username,password,email,phone}=req.body;
             if(((req.session as any).userid && (req.session as any).username)){
-
+                let {username,password,email,phone}=req.body;
                 let update_result:Result<User>=await this.loginservice.UpdateOne((req.session as any).userid,username,password,email,phone);
                 
                 if(update_result.success){
@@ -73,45 +70,52 @@ export class UserRouter{
                 res.status(401).json("Authorization Required");
             }
         });
-
         this.router.put("/addmoney", async (req:Request,res:Response)=>{
-            if((req.session as any).userid && (req.session as any).username){
+            let {userid,username}=(req.session as any);
+            if(userid && username){
+                
                 let {amount} = req.body;
-                let updated_wallet:Result<Wallet>=await this.walletservice.FindOneForeignID((req.session as any).userid);
+                
+                let updated_wallet:Result<Wallet>=await this.walletservice.FindOneForeignID(userid);
                 if(typeof updated_wallet.value != "undefined"){
+                    
                     updated_wallet.value.amount+=amount;
-                    let wallet:Result<Wallet>=await this.walletservice.UpdateOne((req.session as any).userid,updated_wallet.value.amount);
+                    
+                    let wallet:Result<Wallet>=await this.walletservice.UpdateOne(userid,updated_wallet.value.amount);
+                    
                     if(wallet.success){
                         res.status(200).json("Money is added");
                     }else{
-                        res.status(404).json({});
+                        res.status(401).json("This Operation cannot be done");
                     }
+                }else{
+                    res.status(401).json("There is no Wallet with this info");
                 }
-                res.status(404).json("There is no Wallet with this info");
             }else{
                 res.status(401).json("Authorization Required");
             }
         });
         this.router.put("/withdrawmoney", async (req:Request,res:Response)=>{
+            let {userid,username}=(req.session as any);
 
-
-            if((req.session as any).userid && (req.session as any).username){
+            if(userid && username){
                 let {amount} = req.body;
-                let wallet_:Result<Wallet> = await this.walletservice.FindOneForeignID((req.session as any).userid);
+                let wallet_:Result<Wallet> = await this.walletservice.FindOneForeignID(userid);
     
                 if(!wallet_.success){
-                    res.status(404).send("There is no wallet with this info");
+                    res.status(401).send("There is no wallet with this info");
                     return;
                 }else{
     
                     if(wallet_.value.amount < amount){
-                        res.status(500).send("Money is Not Enough for this operation");
+                        res.status(401).send("Money is Not Enough for this operation");
                         return;
                     }
                     
                     wallet_.value.amount-=amount;
                     
-                    let wallet:Result<Wallet>=await this.walletservice.UpdateOne((req.session as any).userid,wallet_.value.amount);
+                    let wallet:Result<Wallet>=await this.walletservice.UpdateOne(userid, wallet_.value.amount);
+
                     if(wallet.success){
                         res.status(200).send("Money has been withdrawed");
                         return;
@@ -120,63 +124,56 @@ export class UserRouter{
             }else{
                 res.status(401).json("Authorization Required");
             }
-        })
-
-
-
-        //Getting User And
+        });
         this.router.get("/getuser",async (req:Request,res:Response)=>{
-            
-            if((req.session as any).userid && (req.session as any).username){   
-                let id=(req.session as any).userid;
-                let user_:Result<User> = await this.loginservice.FindOneID(id);
-                if(!user_.success){
-                    res.status(500).json("This user doesnt exist");
+            let {userid,username}=(req.session as any);
+            if(userid && username){   
+                let user_:Result<User> = await this.loginservice.FindOneID(userid);
+                if(user_.success){
+                    res.status(200).json(user_.value);
                 }
                 else{
-                    res.status(200).json(user_.value);
+                    res.status(500).json("This user doesnt exist");
                 }
             }else{
                 res.status(401).json("Authorization Required")
             }
         });
-
         this.router.get("/getwallet",async (req:Request,res:Response)=>{
-            if((req.session as any).userid && (req.session as any).username){   
-                let id=(req.session as any).userid;
-                let wallet_:Result<Wallet>= await this.walletservice.FindOneForeignID(id);
-                if(!wallet_.success){
-                    res.status(500).json("This user doesnt exist");
+            let {userid,username}=(req.session as any);
+            if(userid && username){   
+                
+                let wallet_:Result<Wallet>= await this.walletservice.FindOneForeignID(userid);
+                if(wallet_.success){
+                    res.status(200).json(wallet_.value);
                 }
                 else{
-                    res.status(200).json(wallet_.value);
+                    res.status(401).json("This user doesnt exist");
                 }
             }else{
                 res.status(401).json("Authoriztion Required");
             }
         });
-
         this.router.post("/loginuser",async (req:Request,res:Response)=>{
             let{username,password}=req.body;
-            password=createHash("sha512").update(password).digest("hex");
             let result = await this.loginservice.FindOneUsername(username);
-
+            
             if(result.success){
-                if(result.value.username==username && result.value.password==password){
+                password=createHash("sha512").update(password).digest("hex");
+                if(result.value.password==password){
                     (req.session as any).userid=result.value.id;
                     (req.session as any).username=username;
-                    res.status(202).send("Login Successful");
+                    res.status(200).send("Login Successful");
                 }
                 else{
                     res.status(401).send("Wrong Username Or Password");
                 }
                     
             }else{
-                res.status(404).send("There is No User");
+                res.status(401).send("There is No User");
             }
 
             
         });
-
     }
 }
