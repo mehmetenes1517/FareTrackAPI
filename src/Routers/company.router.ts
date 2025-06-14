@@ -51,7 +51,7 @@ export class CompanyRouter{
                 res.status(200).send(created_company.value);
             }else{
                 res.status(401).send("User Cannot be created")
-            }1
+            }
 
         });
         this.router.get("/getdrivers",async(req:Request,res:Response)=>{

@@ -8,11 +8,12 @@ import { DriverLoginService } from "./Services/driver.login.service";
 import { UserLoginService } from "./Services/user.login.service";
 import { CompanyRouter } from "./Routers/company.router";
 import { CompanyLoginService } from "./Services/company.login.service";
+import { TransactionService } from "./Services/transactions.service";
 const app=express();
 
 
 
-const user_router=new UserRouter(new UserLoginService(),new WalletService());
+const user_router=new UserRouter(new UserLoginService(),new WalletService(),new TransactionService());
 const driver_router=new DriverRouter(new DriverLoginService());
 const company_router=new CompanyRouter(new CompanyLoginService(),new DriverLoginService());
 

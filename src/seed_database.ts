@@ -47,6 +47,15 @@ const main=async()=>{
         email TEXT NOT NULL, 
         phone TEXT NOT NULL 
     );`);
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS transactions
+        (
+            id INTEGER NOT NULL PRIMARY KEY,
+            walletid INTEGER NOT NULL,
+            type TEXT NOT NULL,
+            amount FLOAT NOT NULL
+        );
+        `);
 }
 main();
 

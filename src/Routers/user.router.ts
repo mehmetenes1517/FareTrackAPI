@@ -5,14 +5,18 @@ import { Result } from "../Models/result.model";
 import { User } from "../Models/user.model";
 import { Wallet } from "../Models/wallet.model";
 import { createHash } from "crypto";
+import { TransactionService } from "../Services/transactions.service";
+import { Transaction } from "../Models/transaction.model";
 
 export class UserRouter{
     private loginservice:UserLoginService;
     private walletservice:WalletService;
+    private transactionservice:TransactionService;
     private router:Router;
-    constructor(loginservice:UserLoginService,walletservice:WalletService){
+    constructor(loginservice:UserLoginService,walletservice:WalletService,transactionservice:TransactionService){
         this.loginservice=loginservice;
         this.walletservice=walletservice;
+        this.transactionservice=transactionservice;
         this.router=express.Router();
         this.SetupRoutes();
     }
@@ -40,8 +44,9 @@ export class UserRouter{
             if(userid){
                 let user:Result<User>=await this.loginservice.DeleteOne(userid);
                 let wallet:Result<Wallet>=await this.walletservice.DeleteOne(userid);
-                
                 if(user.success && wallet.success){
+                    //Deleting all transaction history
+                    let transactions:Result<Transaction[]>=await this.transactionservice.DeleteAll(wallet.value.id);
                     res.status(200).json(
                         {
                             user:user.value,
@@ -81,6 +86,9 @@ export class UserRouter{
                     
                     updated_wallet.value.amount+=amount;
                     
+                    //Adding to Transaction history
+                    await this.transactionservice.AddOne(updated_wallet.value.id,'income',amount);
+
                     let wallet:Result<Wallet>=await this.walletservice.UpdateOne(userid,updated_wallet.value.amount);
                     
                     if(wallet.success){
@@ -112,8 +120,12 @@ export class UserRouter{
                         return;
                     }
                     
+
                     wallet_.value.amount-=amount;
-                    
+
+                    //Adding to Transaction history
+                    await this.transactionservice.AddOne(wallet_.value.id,'outcome',amount);
+    
                     let wallet:Result<Wallet>=await this.walletservice.UpdateOne(userid, wallet_.value.amount);
 
                     if(wallet.success){
@@ -137,6 +149,22 @@ export class UserRouter{
                 }
             }else{
                 res.status(401).json("Authorization Required")
+            }
+        });
+        this.router.get("/gettransactions",async (req:Request,res:Response)=>{
+            let {userid,username}=req.session as any;
+            if(userid && username){
+                let wallet_:Result<Wallet>=await this.walletservice.FindOneForeignID(userid);
+                if(wallet_.success){   
+                    let transactions:Result<Transaction[]>=await this.transactionservice.FindManyWalletID(wallet_.value.id);
+                    res.status(200).send(transactions.value);
+                    return;
+                }
+                res.status(401).send("Error Occured");
+                return;
+            }else{
+                res.status(401).send("Authorization Required");
+                return;
             }
         });
         this.router.get("/getwallet",async (req:Request,res:Response)=>{
@@ -175,5 +203,6 @@ export class UserRouter{
 
             
         });
+        
     }
 }
