@@ -55,7 +55,19 @@ const main=async()=>{
             type TEXT NOT NULL,
             amount FLOAT NOT NULL
         );
-        `);
+    `);
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS trips
+        (
+            id INTEGER NOT NULL PRIMARY KEY,
+            companyid INTEGER NOT NULL,
+            driverid INTEGER NOT NULL,
+            from TEXT NOT NULL,
+            to TEXT NOT NULL,
+            price TEXT NOT NULL,
+            time DATETIME NOT NULL
+        );    
+    `);
 }
 main();
 

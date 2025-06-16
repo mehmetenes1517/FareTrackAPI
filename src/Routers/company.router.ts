@@ -5,16 +5,19 @@ import { Company } from "../Models/company.model";
 import { Result } from "../Models/result.model";
 import { createHash } from "crypto";
 import { Driver } from "../Models/driver.model";
+import { TripsService } from "../Services/trips.service";
+import { Trip } from "../Models/trip.model";
 
 export class CompanyRouter{
     private router:Router;
     private company_loginservice:CompanyLoginService;
     private driver_loginservice:DriverLoginService;
-
-    constructor(company_loginservice:CompanyLoginService,driver_loginservice:DriverLoginService){
+    private tripservice:TripsService;
+    constructor(company_loginservice:CompanyLoginService,driver_loginservice:DriverLoginService,tripsService:TripsService){
         this.router=express.Router();
         this.company_loginservice=company_loginservice;
         this.driver_loginservice=driver_loginservice;
+        this.tripservice=tripsService;
         this.SetupRoutes();
     }
     GetRouter():Router{return this.router;}
@@ -38,8 +41,6 @@ export class CompanyRouter{
             }
 
         });
-
-
         this.router.post("/createcompany",async (req:Request,res:Response)=>{
 
             let {companyname,username,password,email,phone} = req.body;
@@ -83,23 +84,18 @@ export class CompanyRouter{
                 }
             }
         });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        this.router.get("/gettrips",async (req:Request,res:Response)=>{
+            let {companyname,companyid}=req.session as any;
+            if(companyid&&companyname){
+                let trips:Result<Trip[]>=await this.tripservice.FindManyCompanyID(companyid);
+                if(trips.success){
+                    res.status(200).send(trips.value);
+                }else{
+                    res.status(500).send("Error");
+                }
+            }else{
+                res.status(401).send("Authorizaiton Required");
+            }
+        });
     }
-
-
-
-
 };
