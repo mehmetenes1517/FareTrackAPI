@@ -7,17 +7,21 @@ import { createHash } from "crypto";
 import { Driver } from "../Models/driver.model";
 import { TripsService } from "../Services/trips.service";
 import { Trip } from "../Models/trip.model";
+import { GPSService } from "../Services/gps.service";
+import { Location } from "../Models/location.model";
 
 export class CompanyRouter{
     private router:Router;
     private company_loginservice:CompanyLoginService;
     private driver_loginservice:DriverLoginService;
     private tripservice:TripsService;
-    constructor(company_loginservice:CompanyLoginService,driver_loginservice:DriverLoginService,tripsService:TripsService){
+    private gpsservice:GPSService;
+    constructor(company_loginservice:CompanyLoginService,driver_loginservice:DriverLoginService,tripsService:TripsService,gpsservice:GPSService){
         this.router=express.Router();
         this.company_loginservice=company_loginservice;
         this.driver_loginservice=driver_loginservice;
         this.tripservice=tripsService;
+        this.gpsservice=gpsservice;
         this.SetupRoutes();
     }
     GetRouter():Router{return this.router;}
@@ -34,6 +38,8 @@ export class CompanyRouter{
                 if(company_result.value.password==password){
                     (req.session as any).companyid=company_result.value.id;
                     (req.session as any).companyname=company_result.value.username;
+                    (req.session as any).roleid=0;
+
                     res.status(200).send(company_result.value);
                 }
             }else{
@@ -49,6 +55,8 @@ export class CompanyRouter{
             if(created_company.success){
                 (req.session as any).companyid=created_company.value.id;
                 (req.session as any).companyname=created_company.value.username;
+                (req.session as any).roleid=0;
+
                 res.status(200).send(created_company.value);
             }else{
                 res.status(401).send("User Cannot be created")
@@ -56,8 +64,8 @@ export class CompanyRouter{
 
         });
         this.router.get("/getdrivers",async(req:Request,res:Response)=>{
-            let {companyid,companyname} = req.session as any;
-            if(companyid && companyname){
+            let {companyid,companyname,roleid} = req.session as any;
+            if(companyid && companyname && roleid==0){
 
                 let drivers_result:Result<Driver[]>=await this.driver_loginservice.FindManyCompanyID(companyid);
                 if(drivers_result.success){
@@ -70,9 +78,33 @@ export class CompanyRouter{
                 res.status(401).send("Authorization Required");
             }
         });
+        this.router.get("/getdriverlocations", async (req:Request,res:Response)=>{
+            let {companyname,companyid,roleid}=req.session as any;
+            if(companyid && companyname && roleid==0){
+                let drivers_:Result<Driver[]>=await this.driver_loginservice.FindManyCompanyID(companyid);
+                let ids:number[]=[];
+                if(drivers_.success){
+                    for(let i=0;i<drivers_.value.length;i++){
+                        ids.push(drivers_.value[i].id);
+                    }
+                    let locations:Location[]=[];
+                    for (let i = 0; i < ids.length; i++) {
+                        let val:Result<Location>=await this.gpsservice.FindOneDriverID(ids[i]);
+                        if(val.success){
+                            locations.push(val.value);
+                        }
+                    }
+                    res.status(200).send(locations);
+                }else{
+                    res.status(401).send("Authorization Required");
+                }
+            }else{
+                res.status(401).send("Authorization Required");
+            }
+        });
         this.router.post("/createdriver",async (req:Request,res:Response)=>{
-            let {companyid,companyname}=req.session as any;
-            if(companyid && companyname){
+            let {companyid,companyname,roleid}=req.session as any;
+            if(companyid && companyname && roleid==0){
 
                 let {username,password,email,busid} = req.body;
                 
@@ -82,11 +114,13 @@ export class CompanyRouter{
                 }else{
                     res.status(401).send("User Cannot be created");
                 }
+            }else{
+                res.status(401).send("Authorization Required");
             }
         });
         this.router.get("/gettrips",async (req:Request,res:Response)=>{
-            let {companyname,companyid}=req.session as any;
-            if(companyid&&companyname){
+            let {companyname,companyid,roleid}=req.session as any;
+            if(companyid && companyname && roleid==0){
                 let trips:Result<Trip[]>=await this.tripservice.FindManyCompanyID(companyid);
                 if(trips.success){
                     res.status(200).send(trips.value);

@@ -5,14 +5,18 @@ import { Driver } from "../Models/driver.model";
 import { createHash } from "crypto";
 import { TripsService } from "../Services/trips.service";
 import { Trip } from "../Models/trip.model";
+import { GPSService } from "../Services/gps.service";
+import { Location } from "../Models/location.model";
 
 export class DriverRouter{
     private loginservice:DriverLoginService;
     private router:Router;
     private tripservice:TripsService;
-    constructor(loginservice:DriverLoginService,tripservice:TripsService){
+    private gpsservice:GPSService;
+    constructor(loginservice:DriverLoginService,tripservice:TripsService,gpsservice:GPSService){
         this.loginservice=loginservice;
         this.tripservice=tripservice;
+        this.gpsservice=gpsservice;
         this.router=express.Router();
         this.SetupRoutes();
     }
@@ -27,12 +31,11 @@ export class DriverRouter{
             if(driver_result.success){
                 
                 password=createHash("sha512").update(password).digest("hex");
-                console.log(driver_result.value.password);
-                console.log(password);
                 if(driver_result.value.password==password){
 
                     (req.session as any).drivername=username;
                     (req.session as any).driverid=driver_result.value.id;
+                    (req.session as any).roleid=1;
 
                     res.status(200).send("User Logged in");
                     return;
@@ -47,8 +50,8 @@ export class DriverRouter{
             }
         });
         this.router.put("/activate",async (req:Request,res:Response)=>{
-            let {drivername,driverid} = req.session as any;
-            if(drivername && driverid){
+            let {drivername,driverid,roleid} = req.session as any;
+            if(drivername && driverid && roleid==1){
                 let res_activation:Result<boolean>=await this.loginservice.ActivateOne(driverid);
                 if(res_activation.success){
                     res.status(200).send("OK");
@@ -60,8 +63,8 @@ export class DriverRouter{
             }
         });
         this.router.put("/deactivate",async (req:Request,res:Response)=>{
-            let {drivername,driverid} = req.session as any;
-            if(drivername && driverid){
+            let {drivername,driverid,roleid} = req.session as any;
+            if(drivername && driverid && roleid==1){
                 let res_activation:Result<boolean>=await this.loginservice.DeactivateOne(driverid);
                 if(res_activation.success){
                     res.status(200).send("OK");
@@ -86,8 +89,8 @@ export class DriverRouter{
             }
         });
         this.router.get("/gettrips",async (req:Request,res:Response)=>{
-                    let {drivername,driverid}=req.session as any;
-                    if(driverid&&drivername){
+                    let {drivername,driverid,roleid}=req.session as any;
+                    if(driverid&&drivername&&roleid==1){
                         let trips:Result<Trip[]>=await this.tripservice.FindManyDriverID(driverid);
                         if(trips.success){
                             res.status(200).send(trips.value);
@@ -97,7 +100,43 @@ export class DriverRouter{
                     }else{
                         res.status(401).send("Authorizaiton Required");
                     }
-                });
+        });
+        this.router.post("/sharelocation",async (req:Request,res:Response)=>{
+                            let {driverid,drivername,roleid}=req.session as any;
+                            if(driverid && drivername && roleid==1){
+                                let {longtitude,latitude,time} = req.body;
+                                let user:Result<Driver>=await this.loginservice.FindOneID(driverid);
+                                if(user.success){
+                                    let location :Result<Location>= await this.gpsservice.FindOneDriverID(driverid);
+                                    if(location.success){
+                                        let loc_update:Result<Location>=await this.gpsservice.UpdateOneDriver(driverid,longtitude,latitude,time);
+                                        res.status(200).send(loc_update.value);
+                                    }else{
+                                        let loc_add:Result<Location>=await this.gpsservice.AddOneDriver(driverid,longtitude,latitude,time);
+                                        res.status(200).send(loc_add.value);
+                                    }
+                                }else{
+                                    res.status(401).send("User Cannot be Found");
+                                }
+                            }else{
+                                res.status(401).send("Authorization Required");
+                            }
+                
+                        });
+        this.router.get("/getlocation",async (req:Request,res:Response)=>{
+            let {drivername,driverid,roleid} = req.session as any;
+            if(driverid && drivername && roleid==1){
+                let location :Result<Location> =await this.gpsservice.FindOneDriverID(driverid);
+                if(location.success){
+                    res.status(200).send(location.value);
+                }else{
+                    res.status(401).send("Authorization Required");
+                }
+            }else{
+                res.status(401).send("Authorization Required");
+            }
+
+        });
     }
 
 

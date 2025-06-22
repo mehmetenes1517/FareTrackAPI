@@ -56,15 +56,28 @@ const main=async()=>{
             amount FLOAT NOT NULL
         );
     `);
+    
     await db.exec(`
         CREATE TABLE IF NOT EXISTS trips
         (
             id INTEGER NOT NULL PRIMARY KEY,
             companyid INTEGER NOT NULL,
             driverid INTEGER NOT NULL,
-            from TEXT NOT NULL,
-            to TEXT NOT NULL,
+            from_ TEXT NOT NULL,
+            to_ TEXT NOT NULL,
             price TEXT NOT NULL,
+            time DATETIME NOT NULL
+        );    
+    `);
+
+    await db.exec(`
+        CREATE TABLE IF NOT EXISTS locations
+        (
+            id INTEGER NOT NULL PRIMARY KEY,
+            foreignid INTEGER NOT NULL,
+            roleid INTEGER NOT NULL,
+            latitude FLOAT NOT NULL,
+            longtitude FLOAT NOT NULL,
             time DATETIME NOT NULL
         );    
     `);

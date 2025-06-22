@@ -10,13 +10,14 @@ import { CompanyRouter } from "./Routers/company.router";
 import { CompanyLoginService } from "./Services/company.login.service";
 import { TransactionService } from "./Services/transactions.service";
 import { TripsService } from "./Services/trips.service";
+import { GPSService } from "./Services/gps.service";
 const app=express();
 
 
 
-const user_router=new UserRouter(new UserLoginService(),new WalletService(),new TransactionService());
-const driver_router=new DriverRouter(new DriverLoginService(),new TripsService());
-const company_router=new CompanyRouter(new CompanyLoginService(),new DriverLoginService(),new TripsService());
+const user_router=new UserRouter(new UserLoginService(),new WalletService(),new TransactionService(),new GPSService());
+const driver_router=new DriverRouter(new DriverLoginService(),new TripsService(),new GPSService());
+const company_router=new CompanyRouter(new CompanyLoginService(),new DriverLoginService(),new TripsService(),new GPSService());
 
 
 app.use(express.json());

@@ -7,16 +7,20 @@ import { Wallet } from "../Models/wallet.model";
 import { createHash } from "crypto";
 import { TransactionService } from "../Services/transactions.service";
 import { Transaction } from "../Models/transaction.model";
+import { GPSService } from "../Services/gps.service";
+import { Location } from "../Models/location.model";
 
 export class UserRouter{
     private loginservice:UserLoginService;
     private walletservice:WalletService;
     private transactionservice:TransactionService;
+    private gpsservice:GPSService;
     private router:Router;
-    constructor(loginservice:UserLoginService,walletservice:WalletService,transactionservice:TransactionService){
+    constructor(loginservice:UserLoginService,walletservice:WalletService,transactionservice:TransactionService,gpsservice:GPSService){
         this.loginservice=loginservice;
         this.walletservice=walletservice;
         this.transactionservice=transactionservice;
+        this.gpsservice=gpsservice;
         this.router=express.Router();
         this.SetupRoutes();
     }
@@ -33,6 +37,8 @@ export class UserRouter{
 
                 (req.session as any).userid=id;
                 (req.session as any).username=username;
+                (req.session as any).roleid=2;
+
 
                 res.status(200).json("User Has Been Created");
             }else{
@@ -61,7 +67,8 @@ export class UserRouter{
             }
         });
         this.router.put("/updateuser",async(req:Request,res:Response)=>{
-            if(((req.session as any).userid && (req.session as any).username)){
+
+            if((req.session as any).userid && (req.session as any).username && (req.session as any).roleid && (req.session as any).roleid==2){
                 let {username,password,email,phone}=req.body;
                 let update_result:Result<User>=await this.loginservice.UpdateOne((req.session as any).userid,username,password,email,phone);
                 
@@ -76,8 +83,8 @@ export class UserRouter{
             }
         });
         this.router.put("/addmoney", async (req:Request,res:Response)=>{
-            let {userid,username}=(req.session as any);
-            if(userid && username){
+            let {userid,username,roleid}=(req.session as any);
+            if(userid && username && roleid && roleid==2){
                 
                 let {amount} = req.body;
                 
@@ -104,9 +111,9 @@ export class UserRouter{
             }
         });
         this.router.put("/withdrawmoney", async (req:Request,res:Response)=>{
-            let {userid,username}=(req.session as any);
+            let {userid,username,roleid}=(req.session as any);
 
-            if(userid && username){
+            if(userid && username && roleid && roleid==2){
                 let {amount} = req.body;
                 let wallet_:Result<Wallet> = await this.walletservice.FindOneForeignID(userid);
     
@@ -138,8 +145,8 @@ export class UserRouter{
             }
         });
         this.router.get("/getuser",async (req:Request,res:Response)=>{
-            let {userid,username}=(req.session as any);
-            if(userid && username){   
+            let {userid,username,roleid}=(req.session as any);
+            if(userid && username && roleid && roleid==2){   
                 let user_:Result<User> = await this.loginservice.FindOneID(userid);
                 if(user_.success){
                     res.status(200).json(user_.value);
@@ -152,8 +159,8 @@ export class UserRouter{
             }
         });
         this.router.get("/gettransactions",async (req:Request,res:Response)=>{
-            let {userid,username}=req.session as any;
-            if(userid && username){
+            let {userid,username,roleid}=req.session as any;
+            if(userid && username && roleid && roleid==2){
                 let wallet_:Result<Wallet>=await this.walletservice.FindOneForeignID(userid);
                 if(wallet_.success){   
                     let transactions:Result<Transaction[]>=await this.transactionservice.FindManyWalletID(wallet_.value.id);
@@ -168,8 +175,8 @@ export class UserRouter{
             }
         });
         this.router.get("/getwallet",async (req:Request,res:Response)=>{
-            let {userid,username}=(req.session as any);
-            if(userid && username){   
+            let {userid,username,roleid}=(req.session as any);
+            if(userid && username && roleid && roleid==2){   
                 
                 let wallet_:Result<Wallet>= await this.walletservice.FindOneForeignID(userid);
                 if(wallet_.success){
@@ -191,6 +198,8 @@ export class UserRouter{
                 if(result.value.password==password){
                     (req.session as any).userid=result.value.id;
                     (req.session as any).username=username;
+                    (req.session as any).roleid=2;
+
                     res.status(200).send("Login Successful");
                 }
                 else{
@@ -203,6 +212,42 @@ export class UserRouter{
 
             
         });
+        this.router.get("/getlocation",async (req:Request,res:Response)=>{
+                    let {username,userid,roleid} = req.session as any;
+                    if(username && userid && roleid && roleid==2){
+                        let location :Result<Location> =await this.gpsservice.FindOneUserID(userid);
+                        if(location.success){
+                            res.status(200).send(location.value);
+                        }else{
+                            res.status(401).send("Cannot Get Location");
+                        }
+                    }else{
+                        res.status(401).send("Authorization Required");
+                    }
+        
+        });
+         this.router.post("/sharelocation",async (req:Request,res:Response)=>{
+                    let {userid,username,roleid}=req.session as any;
+                    if(userid && username && roleid==2){
+                        let {longtitude,latitude,time} = req.body;
+                        let user:Result<User>=await this.loginservice.FindOneID(userid);
+                        if(user.success){
+                            let location :Result<Location>= await this.gpsservice.FindOneUserID(userid);
+                            if(location.success){
+                                let loc_update:Result<Location>=await this.gpsservice.UpdateOneUser(userid,longtitude,latitude,time);
+                                res.status(200).send(loc_update.value);
+                            }else{
+                                let loc_add:Result<Location>=await this.gpsservice.AddOneUser(userid,longtitude,latitude,time);
+                                res.status(200).send(loc_add.value);
+                            }
+                        }else{
+                            res.status(401).send("User Cannot be Found");
+                        }
+                    }else{
+                        res.status(401).send("Authorization Required");
+                    }
+        
+                });
         
     }
 }

@@ -45,7 +45,7 @@ export class TripsService{
     public async InsertOne(driverid:number,from:string,to:string,price:number,time:string):Promise<Result<Trip>>{
         let driver_result:Result<Driver> = await this.driverservice.FindOneID(driverid);
         if(driver_result.success){    
-            await this.db.exec(`INSERT INTO trips (companyid,driverid,from,to,time) 
+            await this.db.exec(`INSERT INTO trips (companyid,driverid,from_,to_,time) 
                 VALUES(
                      ${driver_result.value.companyid},
                      ${driverid},
