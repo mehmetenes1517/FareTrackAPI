@@ -4,7 +4,7 @@ import { createHash } from "crypto";
 import { User } from "../Models/user.model";
 import { Result } from "../Models/result.model";
 
-export class LoginService{
+export class UserLoginService{
     private db:Database;
     constructor(){
         this.SetDB();
@@ -98,8 +98,14 @@ export class LoginService{
         
         //Checking existance of user
         let user:Result<User>= await this.FindOneID(id);
-        
-        if( !user.success ){
+        let name_same:Result<User>=await this.FindOneUsername(username);
+        let email_same:Result<User>=await this.FindOneEmail(email);
+        let phone_same:Result<User>=await this.FindOnePhone(phone);
+
+        if(!user.success ){
+            return new Promise(e=>e({success:false,value:{} as User}));
+        }
+        else if(  name_same.success && name_same.value.id!=id || email_same.success&&email_same.value.id!=id || phone_same.success && phone_same.value.id!=id){
             return new Promise(e=>e({success:false,value:{} as User}));
         }else{
             let hashed_password=createHash("sha512").update(password).digest("hex");

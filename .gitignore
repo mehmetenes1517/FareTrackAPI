@@ -1,5 +1,7 @@
 .env
 .vscode/
 .devnotes
-.token_file
+.token
 main.db
+Screenshots/*
+Screenshots/
