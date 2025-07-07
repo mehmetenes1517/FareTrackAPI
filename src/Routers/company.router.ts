@@ -9,19 +9,23 @@ import { TripsService } from "../Services/trips.service";
 import { Trip } from "../Models/trip.model";
 import { GPSService } from "../Services/gps.service";
 import { Location } from "../Models/location.model";
+import { WalletService } from "../Services/wallet.service";
+import { Wallet } from "../Models/wallet.model";
 
 export class CompanyRouter{
     private router:Router;
     private company_loginservice:CompanyLoginService;
+    private walletservice:WalletService;
     private driver_loginservice:DriverLoginService;
     private tripservice:TripsService;
     private gpsservice:GPSService;
-    constructor(company_loginservice:CompanyLoginService,driver_loginservice:DriverLoginService,tripsService:TripsService,gpsservice:GPSService){
+    constructor(company_loginservice:CompanyLoginService,driver_loginservice:DriverLoginService,tripsService:TripsService,gpsservice:GPSService,walletservice:WalletService){
         this.router=express.Router();
         this.company_loginservice=company_loginservice;
         this.driver_loginservice=driver_loginservice;
         this.tripservice=tripsService;
         this.gpsservice=gpsservice;
+        this.walletservice=walletservice;
         this.SetupRoutes();
     }
     GetRouter():Router{return this.router;}
@@ -52,14 +56,20 @@ export class CompanyRouter{
             let {companyname,username,password,email,phone} = req.body;
 
             let created_company:Result<Company>=await this.company_loginservice.AddOne(companyname,username,password,email,phone);
+            
             if(created_company.success){
-                (req.session as any).companyid=created_company.value.id;
-                (req.session as any).companyname=created_company.value.username;
-                (req.session as any).roleid=0;
-
-                res.status(200).send(created_company.value);
+                
+                let wallet:Result<Wallet>=await this.walletservice.AddOne(created_company.value.id,0,0);
+                if(wallet.success){
+                    (req.session as any).companyid=created_company.value.id;
+                    (req.session as any).companyname=created_company.value.username;
+                    (req.session as any).roleid=0;   
+                    res.status(200).send(created_company.value);
+                }else{
+                    res.status(401).send("Wallet Cannot be created");
+                }
             }else{
-                res.status(401).send("User Cannot be created")
+                res.status(401).send("User Cannot be created");
             }
 
         });

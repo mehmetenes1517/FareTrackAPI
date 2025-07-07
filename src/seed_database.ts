@@ -24,6 +24,7 @@ const main=async()=>{
         (
         id INTEGER NOT NULL PRIMARY KEY,
         foreign_id INTEGER NOT NULL ,
+        roleid INTEGER NOT NULL,
         amount FLOAT NOT NULL 
         );`);
     await db.exec(`
