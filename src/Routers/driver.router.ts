@@ -147,7 +147,7 @@ export class DriverRouter{
 
                 let res_:Result<string>=await this.nfcservice.MakePayment(driverid,userid,from,to,time,price);
                 if(res_.success){
-                    res.status(401).send("Payment Success");
+                    res.status(200).send("Payment Success");
                 }else{
                     res.status(401).send("Authorization Required");
                 }
@@ -174,7 +174,7 @@ export class DriverRouter{
 
                 let res_:Result<string>=await this.nfcservice.MakePayment(driverid as number,userid,from,to,time,price);
                 if(res_.success){
-                    res.status(401).send("Payment Success");
+                    res.status(200).send("Payment Success");
                 }else{
                     res.status(401).send("Authorization Required");
                 }
