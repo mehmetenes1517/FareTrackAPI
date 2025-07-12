@@ -7,16 +7,19 @@ import { TripsService } from "../Services/trips.service";
 import { Trip } from "../Models/trip.model";
 import { GPSService } from "../Services/gps.service";
 import { Location } from "../Models/location.model";
+import { NFCService } from "../Services/nfc.service";
 
 export class DriverRouter{
     private loginservice:DriverLoginService;
     private router:Router;
     private tripservice:TripsService;
     private gpsservice:GPSService;
-    constructor(loginservice:DriverLoginService,tripservice:TripsService,gpsservice:GPSService){
+    private nfcservice:NFCService;
+    constructor(loginservice:DriverLoginService,tripservice:TripsService,gpsservice:GPSService,nfcservice:NFCService){
         this.loginservice=loginservice;
         this.tripservice=tripservice;
         this.gpsservice=gpsservice;
+        this.nfcservice=nfcservice;
         this.router=express.Router();
         this.SetupRoutes();
     }
@@ -129,6 +132,49 @@ export class DriverRouter{
                 let location :Result<Location> =await this.gpsservice.FindOneDriverID(driverid);
                 if(location.success){
                     res.status(200).send(location.value);
+                }else{
+                    res.status(401).send("Authorization Required");
+                }
+            }else{
+                res.status(401).send("Authorization Required");
+            }
+
+        });
+        this.router.post("/nfcpayment",async (req:Request,res:Response)=>{
+
+            let {driverid,userid,from,to,time,price}=req.body;
+            if(driverid && userid){
+
+                let res_:Result<string>=await this.nfcservice.MakePayment(driverid,userid,from,to,time,price);
+                if(res_.success){
+                    res.status(401).send("Payment Success");
+                }else{
+                    res.status(401).send("Authorization Required");
+                }
+            }else{
+                res.status(401).send("Authorization Required");
+            }
+
+        });
+        this.router.get("/qrpayment",async (req:Request,res:Response)=>{
+
+            let {code} =req.params;
+            //CODE = >  driverid:userid:from:to:time:price
+
+            let array_code:any[]=code.split(":");
+            
+            let driverid:number=array_code[0];
+            let userid:number=array_code[1];
+            let from:string=array_code[2];
+            let to:string=array_code[3];
+            let time:string=array_code[4];
+            let price:number=array_code[5];
+
+            if(driverid && userid){
+
+                let res_:Result<string>=await this.nfcservice.MakePayment(driverid as number,userid,from,to,time,price);
+                if(res_.success){
+                    res.status(401).send("Payment Success");
                 }else{
                     res.status(401).send("Authorization Required");
                 }
