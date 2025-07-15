@@ -11,13 +11,14 @@ import { CompanyLoginService } from "./Services/company.login.service";
 import { TransactionService } from "./Services/transactions.service";
 import { TripsService } from "./Services/trips.service";
 import { GPSService } from "./Services/gps.service";
+import { NFCService } from "./Services/nfc.service";
 const app=express();
 
 
 
 const user_router=new UserRouter(new UserLoginService(),new WalletService(),new TransactionService(),new GPSService());
-const driver_router=new DriverRouter(new DriverLoginService(),new TripsService(),new GPSService());
-const company_router=new CompanyRouter(new CompanyLoginService(),new DriverLoginService(),new TripsService(),new GPSService());
+const driver_router=new DriverRouter(new DriverLoginService(),new TripsService(),new GPSService(),new NFCService());
+const company_router=new CompanyRouter(new CompanyLoginService(),new DriverLoginService(),new TripsService(),new GPSService(),new WalletService());
 
 
 app.use(express.json());

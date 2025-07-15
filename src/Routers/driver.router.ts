@@ -158,17 +158,14 @@ export class DriverRouter{
         });
         this.router.get("/qrpayment",async (req:Request,res:Response)=>{
 
-            let {code} =req.params;
-            //CODE = >  driverid:userid:from:to:time:price
-
-            let array_code:any[]=code.split(":");
+            // driverid:userid:from:to:time:price
             
-            let driverid:number=array_code[0];
-            let userid:number=array_code[1];
-            let from:string=array_code[2];
-            let to:string=array_code[3];
-            let time:string=array_code[4];
-            let price:number=array_code[5];
+            let driverid:number=req.params.driverid as any;
+            let userid:number=req.params.userid as any;
+            let from:string=req.params.from as any;
+            let to:string=req.params.to as any;
+            let time:string=req.params.time as any;
+            let price:number=req.params.price as any;
 
             if(driverid && userid){
 
@@ -184,9 +181,4 @@ export class DriverRouter{
 
         });
     }
-
-
-
-
-
 };
