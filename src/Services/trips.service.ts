@@ -27,25 +27,17 @@ export class TripsService{
         }
     }
     public async FindManyDriverID(driverid:number):Promise<Result<Trip[]>>{
-        let trip=await this.db.get(`SELECT * FROM trips WHERE driverid=${driverid}`);
-        if(typeof trip == "undefined"){
-            return new Promise(e=>e({success:false,value:[] as Trip[]}))
-        }else{
+        let trip=await this.db.all(`SELECT * FROM trips WHERE driverid=${driverid}`);
             return new Promise(e=>e({success:true,value:trip}));
-        }
     }
     public async FindManyCompanyID(companyid:number):Promise<Result<Trip[]>>{
         let trip=await this.db.get(`SELECT * FROM trips WHERE companyid=${companyid}`);
-        if(typeof trip == "undefined"){
-            return new Promise(e=>e({success:false,value:[] as Trip[]}))
-        }else{
-            return new Promise(e=>e({success:true,value:trip}));
-        }
+        return new Promise(e=>e({success:true,value:trip}));
     }
     public async InsertOne(driverid:number,from:string,to:string,price:number,time:string):Promise<Result<Trip>>{
         let driver_result:Result<Driver> = await this.driverservice.FindOneID(driverid);
         if(driver_result.success){    
-            await this.db.exec(`INSERT INTO trips (companyid,driverid,from_,to_,time) 
+            await this.db.exec(`INSERT INTO trips (companyid,driverid,from_,to_,price,time) 
                 VALUES(
                      ${driver_result.value.companyid},
                      ${driverid},

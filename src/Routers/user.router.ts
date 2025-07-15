@@ -33,7 +33,7 @@ export class UserRouter{
             let create_result:Result<User>=await this.loginservice.AddOne(username,password,email,phone);
             if(create_result.success){
                 let {id}=(await this.loginservice.FindOneUsername(username)).value;
-                this.walletservice.AddOne(id,0);
+                this.walletservice.AddOne(id,2,0);
 
                 (req.session as any).userid=id;
                 (req.session as any).username=username;
@@ -46,10 +46,10 @@ export class UserRouter{
             }
         });
         this.router.delete("/deleteuser",async (req:Request,res:Response)=>{
-            let {userid}=(req.session as any);
-            if(userid){
+            let {userid,roleid}=(req.session as any);
+            if(userid && roleid==2){
                 let user:Result<User>=await this.loginservice.DeleteOne(userid);
-                let wallet:Result<Wallet>=await this.walletservice.DeleteOne(userid);
+                let wallet:Result<Wallet>=await this.walletservice.DeleteOne(userid,roleid);
                 if(user.success && wallet.success){
                     //Deleting all transaction history
                     let transactions:Result<Transaction[]>=await this.transactionservice.DeleteAll(wallet.value.id);
@@ -66,7 +66,7 @@ export class UserRouter{
                 res.status(401).json("Authorization Required");
             }
         });
-        this.router.put("/updateuser",async(req:Request,res:Response)=>{
+        this.router.put("/updateuser",async (req:Request,res:Response)=>{
 
             if((req.session as any).userid && (req.session as any).username && (req.session as any).roleid && (req.session as any).roleid==2){
                 let {username,password,email,phone}=req.body;
@@ -85,10 +85,9 @@ export class UserRouter{
         this.router.put("/addmoney", async (req:Request,res:Response)=>{
             let {userid,username,roleid}=(req.session as any);
             if(userid && username && roleid && roleid==2){
-                
                 let {amount} = req.body;
                 
-                let updated_wallet:Result<Wallet>=await this.walletservice.FindOneForeignID(userid);
+                let updated_wallet:Result<Wallet>=await this.walletservice.FindOneForeignID(userid,roleid);
                 if(typeof updated_wallet.value != "undefined"){
                     
                     updated_wallet.value.amount+=amount;
@@ -96,7 +95,7 @@ export class UserRouter{
                     //Adding to Transaction history
                     await this.transactionservice.AddOne(updated_wallet.value.id,'income',amount);
 
-                    let wallet:Result<Wallet>=await this.walletservice.UpdateOne(userid,updated_wallet.value.amount);
+                    let wallet:Result<Wallet>=await this.walletservice.UpdateOne(userid,roleid,updated_wallet.value.amount);
                     
                     if(wallet.success){
                         res.status(200).json("Money is added");
@@ -115,7 +114,7 @@ export class UserRouter{
 
             if(userid && username && roleid && roleid==2){
                 let {amount} = req.body;
-                let wallet_:Result<Wallet> = await this.walletservice.FindOneForeignID(userid);
+                let wallet_:Result<Wallet> = await this.walletservice.FindOneForeignID(userid,roleid);
     
                 if(!wallet_.success){
                     res.status(401).send("There is no wallet with this info");
@@ -133,7 +132,7 @@ export class UserRouter{
                     //Adding to Transaction history
                     await this.transactionservice.AddOne(wallet_.value.id,'outcome',amount);
     
-                    let wallet:Result<Wallet>=await this.walletservice.UpdateOne(userid, wallet_.value.amount);
+                    let wallet:Result<Wallet>=await this.walletservice.UpdateOne(userid,roleid, wallet_.value.amount);
 
                     if(wallet.success){
                         res.status(200).send("Money has been withdrawed");
@@ -161,7 +160,7 @@ export class UserRouter{
         this.router.get("/gettransactions",async (req:Request,res:Response)=>{
             let {userid,username,roleid}=req.session as any;
             if(userid && username && roleid && roleid==2){
-                let wallet_:Result<Wallet>=await this.walletservice.FindOneForeignID(userid);
+                let wallet_:Result<Wallet>=await this.walletservice.FindOneForeignID(userid,roleid);
                 if(wallet_.success){   
                     let transactions:Result<Transaction[]>=await this.transactionservice.FindManyWalletID(wallet_.value.id);
                     res.status(200).send(transactions.value);
@@ -178,7 +177,7 @@ export class UserRouter{
             let {userid,username,roleid}=(req.session as any);
             if(userid && username && roleid && roleid==2){   
                 
-                let wallet_:Result<Wallet>= await this.walletservice.FindOneForeignID(userid);
+                let wallet_:Result<Wallet>= await this.walletservice.FindOneForeignID(userid,roleid);
                 if(wallet_.success){
                     res.status(200).json(wallet_.value);
                 }

@@ -34,7 +34,7 @@ export class GPSService{
         if(driver.success){
             return new Promise(e=>e({success:false,value:{} as Location}));
         }else{
-            await this.db.exec(`INSERT INTO locations (foreignid,roleid,longtitude,latitude,time) VALUES(${id},1,${longtitude},${latitude},'${time}')`);
+            await this.db.exec(`INSERT INTO locations (foreignid,roleid,latitude,longtitude,time) VALUES(${id},1,${latitude},${longtitude},'${time}')`);
             let driver_:Result<Location>= await this.FindOneDriverID(id);
             if(driver_.success){
                 return new Promise(e=>e({success:true,value: driver_.value}));

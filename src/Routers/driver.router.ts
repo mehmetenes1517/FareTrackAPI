@@ -7,16 +7,19 @@ import { TripsService } from "../Services/trips.service";
 import { Trip } from "../Models/trip.model";
 import { GPSService } from "../Services/gps.service";
 import { Location } from "../Models/location.model";
+import { NFCService } from "../Services/nfc.service";
 
 export class DriverRouter{
     private loginservice:DriverLoginService;
     private router:Router;
     private tripservice:TripsService;
     private gpsservice:GPSService;
-    constructor(loginservice:DriverLoginService,tripservice:TripsService,gpsservice:GPSService){
+    private nfcservice:NFCService;
+    constructor(loginservice:DriverLoginService,tripservice:TripsService,gpsservice:GPSService,nfcservice:NFCService){
         this.loginservice=loginservice;
         this.tripservice=tripservice;
         this.gpsservice=gpsservice;
+        this.nfcservice=nfcservice;
         this.router=express.Router();
         this.SetupRoutes();
     }
@@ -104,14 +107,20 @@ export class DriverRouter{
         this.router.post("/sharelocation",async (req:Request,res:Response)=>{
                             let {driverid,drivername,roleid}=req.session as any;
                             if(driverid && drivername && roleid==1){
+                                //YYYY-MM-DD hh:mm:ss
+                                //DATETIME TEXT FORMAT
+                                
                                 let {longtitude,latitude,time} = req.body;
                                 let user:Result<Driver>=await this.loginservice.FindOneID(driverid);
                                 if(user.success){
+                                    console.log("aaaa");
                                     let location :Result<Location>= await this.gpsservice.FindOneDriverID(driverid);
                                     if(location.success){
+                                        console.log("bbbb");    
                                         let loc_update:Result<Location>=await this.gpsservice.UpdateOneDriver(driverid,longtitude,latitude,time);
                                         res.status(200).send(loc_update.value);
                                     }else{
+                                        console.log("cccc");    
                                         let loc_add:Result<Location>=await this.gpsservice.AddOneDriver(driverid,longtitude,latitude,time);
                                         res.status(200).send(loc_add.value);
                                     }
@@ -137,10 +146,49 @@ export class DriverRouter{
             }
 
         });
+        this.router.post("/nfcpayment",async (req:Request,res:Response)=>{
+
+            let {driverid,userid,from,to,time,price}=req.body;
+
+            let res_:Result<string>=await this.nfcservice.MakePayment(driverid,userid,from,to,time,price);
+            console.log("asdasd");
+            if(res_.success){
+                res.status(200).send("Payment Success");
+            }else{
+                res.status(401).send("Authorization Required");
+            }
+        });
+        this.router.get("/qrpayment/:driverid/:userid/:from/:to/:time/:price",async (req:Request,res:Response)=>{
+            // driverid:
+            // userid:
+            // from:
+            // to:
+            // time:
+            // price
+            
+            let driverid:number=req.params.driverid as any;
+            let userid:number=req.params.userid as any;
+            let from:string=req.params.from as any;
+            let to:string=req.params.to as any;
+            let time:string=req.params.time as any;
+            let price:number=req.params.price as any;
+
+            console.log(driverid);
+            console.log(userid);
+            console.log(from);
+            console.log(to);
+            console.log(time);
+            console.log(price);
+
+
+            let res_:Result<string>=await this.nfcservice.MakePayment(driverid as number,userid,from,to,time,price);
+            if(res_.success){
+                console.log("aa");
+               res.status(200).send("Payment Success");
+            }else{
+                console.log("bb");
+                res.status(401).send("Authorization Required");
+            }
+        });
     }
-
-
-
-
-
 };
