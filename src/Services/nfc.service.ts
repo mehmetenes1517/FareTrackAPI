@@ -19,7 +19,7 @@ export class NFCService{
     private transactionservice:TransactionService;
     private walletservice:WalletService;
 
-    NFCService(companyservice:CompanyLoginService,driverservice:DriverLoginService,userservice:UserLoginService, tripservice:TripsService,transactionservice:TransactionService,walletservice:WalletService){
+    constructor(companyservice:CompanyLoginService,driverservice:DriverLoginService,userservice:UserLoginService,tripservice:TripsService,transactionservice:TransactionService,walletservice:WalletService){
         this.SetupDB();
         this.companyservice=companyservice;
         this.driverservice=driverservice;
@@ -39,13 +39,12 @@ export class NFCService{
         if(driver.success){
             let user:Result<User>=await this.userservice.FindOneID(userid);
             if(user.success){
-
+                
                 // Delete Money from user and Add to Company
                 let user_wallet:Result<Wallet> =await this.walletservice.WithdrawMoney(userid,2,price);
                 if(user_wallet.success){
                     // create transaction for user
                     await this.transactionservice.AddOne(user_wallet.value.id,"outcome",price);
-
                     let company_wallet:Result<Wallet>= await this.walletservice.AddMoney(driver.value.companyid,0,price);
                     if(company_wallet.success){
                         // create trip for company and driver

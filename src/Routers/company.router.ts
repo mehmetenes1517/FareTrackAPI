@@ -118,7 +118,7 @@ export class CompanyRouter{
 
                 let {username,password,email,busid} = req.body;
                 
-                let driver_result:Result<Driver>=await this.driver_loginservice.AddOne(companyid,true,username,email,password,busid);
+                let driver_result:Result<Driver>=await this.driver_loginservice.AddOne(companyid,false,username,email,password,busid);
                 if(driver_result.success){
                     res.status(200).send("OK");
                 }else{

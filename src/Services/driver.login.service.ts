@@ -81,7 +81,6 @@ export class DriverLoginService{
         let email_:Result<Driver>=await this.FindOneEmail(email);
         let busid_:Result<Driver>=await this.FindOneEmail(busid);
         if(!username_.success && typeof !email_.success && typeof !busid_.success){
-            console.log("a");
             password=createHash("sha512").update(password).digest("hex");
             await this.db.exec(`INSERT INTO drivers(companyid,isactive,username,email,password,busid) VALUES(${companyid},${isactive},'${username}','${email}','${password}','${busid}');`);
             let driver_result:Result<Driver>=await this.FindOneUsername(username);
