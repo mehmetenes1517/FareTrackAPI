@@ -147,48 +147,20 @@ export class DriverRouter{
 
         });
         this.router.post("/nfcpayment",async (req:Request,res:Response)=>{
-
-            let {driverid,userid,from,to,time,price}=req.body;
+        let {drivername,driverid,roleid} = req.session as any;
+        if(driverid && drivername && roleid==1){
+            let {userid,from,to,time,price}=req.body;
 
             let res_:Result<string>=await this.nfcservice.MakePayment(driverid,userid,from,to,time,price);
-            console.log("asdasd");
             if(res_.success){
                 res.status(200).send("Payment Success");
             }else{
                 res.status(401).send("Authorization Required");
             }
-        });
-        this.router.get("/qrpayment/:driverid/:userid/:from/:to/:time/:price",async (req:Request,res:Response)=>{
-            // driverid:
-            // userid:
-            // from:
-            // to:
-            // time:
-            // price
-            
-            let driverid:number=req.params.driverid as any;
-            let userid:number=req.params.userid as any;
-            let from:string=req.params.from as any;
-            let to:string=req.params.to as any;
-            let time:string=req.params.time as any;
-            let price:number=req.params.price as any;
-
-            console.log(driverid);
-            console.log(userid);
-            console.log(from);
-            console.log(to);
-            console.log(time);
-            console.log(price);
-
-
-            let res_:Result<string>=await this.nfcservice.MakePayment(driverid as number,userid,from,to,time,price);
-            if(res_.success){
-                console.log("aa");
-               res.status(200).send("Payment Success");
-            }else{
-                console.log("bb");
+        }else{
                 res.status(401).send("Authorization Required");
-            }
+        }
         });
+        
     }
 };
