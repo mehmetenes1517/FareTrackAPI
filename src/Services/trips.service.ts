@@ -31,7 +31,7 @@ export class TripsService{
             return new Promise(e=>e({success:true,value:trip}));
     }
     public async FindManyCompanyID(companyid:number):Promise<Result<Trip[]>>{
-        let trip=await this.db.get(`SELECT * FROM trips WHERE companyid=${companyid}`);
+        let trip=await this.db.all(`SELECT * FROM trips WHERE companyid=${companyid}`);
         return new Promise(e=>e({success:true,value:trip}));
     }
     public async InsertOne(driverid:number,from:string,to:string,price:number,time:string):Promise<Result<Trip>>{

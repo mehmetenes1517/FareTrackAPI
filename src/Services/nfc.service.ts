@@ -45,7 +45,7 @@ export class NFCService{
                 if(user_wallet.success){
                     // create transaction for user
                     await this.transactionservice.AddOne(user_wallet.value.id,"outcome",price);
-                    let company_wallet:Result<Wallet>= await this.walletservice.AddMoney(driver.value.companyid,0,price);
+                    let company_wallet:Result<Wallet>= await this.walletservice.AddMoney(driver.value.companyid,0,price as number);
                     if(company_wallet.success){
                         // create trip for company and driver
                         await this.tripservice.InsertOne(driver.value.id,from_,to_,price,time);

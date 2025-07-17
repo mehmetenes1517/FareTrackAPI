@@ -258,20 +258,18 @@ export class UserRouter{
             // time:
             // price
             let {userid,username,roleid}=(req.session as any);
-            if(userid && username && roleid && roleid==2){   
+            if(userid && username && roleid==2){   
                 let driverid:number=req.params.driverid as any;
                 let from:string=req.params.from as any;
                 let to:string=req.params.to as any;
                 let time:string=req.params.time as any;
                 let price:number=req.params.price as any;
 
-
-
-                let res_:Result<string>=await this.nfcservice.MakePayment(driverid as number,userid,from,to,time,price);
+                let res_:Result<string>=await this.nfcservice.MakePayment(driverid,userid,from,to,time,price);
                 if(res_.success){
                 res.status(200).send("Payment Success");
                 }else{
-                    res.status(401).send("Authorization Required");
+                    res.status(401).send("Not enough Money in the wallet");
                 }
             }else{
                 res.status(401).send("Authorization Required");
