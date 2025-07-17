@@ -68,8 +68,8 @@ export class WalletService{
     async AddMoney(foreign_id:number,roleid:number,amount:number):Promise<Result<Wallet>>{
         let wallet=await this.FindOneForeignID(foreign_id,roleid);
         if(wallet.success){
-            let amount_=wallet.value.amount;
-            amount_+=amount;
+            let amount_ : number=wallet.value.amount;
+            amount_ += Number(amount);
             let updated:Result<Wallet>=await this.UpdateOne(foreign_id,roleid,amount_);
             if(updated.success){
                 return new Promise(e=>e({success:true,value:updated.value}));
@@ -83,7 +83,7 @@ export class WalletService{
     async WithdrawMoney(foreign_id:number,roleid:number,amount:number):Promise<Result<Wallet>>{
         let wallet=await this.FindOneForeignID(foreign_id,roleid);
         if(wallet.success){
-            let amount_=wallet.value.amount;
+            let amount_: number=wallet.value.amount;
             if(amount<=amount_){
                 amount_-=amount;
                 let updated:Result<Wallet>=await this.UpdateOne(foreign_id,roleid,amount_);

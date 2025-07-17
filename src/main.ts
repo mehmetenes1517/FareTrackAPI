@@ -15,7 +15,7 @@ import { NFCService } from "./Services/nfc.service";
 const app=express();
 
 
-const user_router=new UserRouter(new UserLoginService(),new WalletService(),new TransactionService(),new GPSService());
+const user_router=new UserRouter(new UserLoginService(),new WalletService(),new TransactionService(),new GPSService(),new NFCService(new CompanyLoginService(),new DriverLoginService(),new UserLoginService(),new TripsService(),new TransactionService(),new WalletService()));
 const driver_router=new DriverRouter(new DriverLoginService(),new TripsService(),new GPSService(),new NFCService(new CompanyLoginService(),new DriverLoginService(),new UserLoginService(),new TripsService(),new TransactionService(),new WalletService()));
 const company_router=new CompanyRouter(new CompanyLoginService(),new DriverLoginService(),new TripsService(),new GPSService(),new WalletService());
 

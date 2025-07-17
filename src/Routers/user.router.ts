@@ -9,6 +9,7 @@ import { TransactionService } from "../Services/transactions.service";
 import { Transaction } from "../Models/transaction.model";
 import { GPSService } from "../Services/gps.service";
 import { Location } from "../Models/location.model";
+import { NFCService } from "../Services/nfc.service";
 
 export class UserRouter{
     private loginservice:UserLoginService;
@@ -16,11 +17,13 @@ export class UserRouter{
     private transactionservice:TransactionService;
     private gpsservice:GPSService;
     private router:Router;
-    constructor(loginservice:UserLoginService,walletservice:WalletService,transactionservice:TransactionService,gpsservice:GPSService){
+    private nfcservice:NFCService;
+    constructor(loginservice:UserLoginService,walletservice:WalletService,transactionservice:TransactionService,gpsservice:GPSService,nfcservice:NFCService){
         this.loginservice=loginservice;
         this.walletservice=walletservice;
         this.transactionservice=transactionservice;
         this.gpsservice=gpsservice;
+        this.nfcservice=nfcservice;
         this.router=express.Router();
         this.SetupRoutes();
     }
@@ -247,6 +250,31 @@ export class UserRouter{
                     }
         
                 });
+        this.router.get("/qrpayment/:driverid/:from/:to/:time/:price",async (req:Request,res:Response)=>{
+            // driverid:
+            // userid:
+            // from:
+            // to:
+            // time:
+            // price
+            let {userid,username,roleid}=(req.session as any);
+            if(userid && username && roleid==2){   
+                let driverid:number=req.params.driverid as any;
+                let from:string=req.params.from as any;
+                let to:string=req.params.to as any;
+                let time:string=req.params.time as any;
+                let price:number=req.params.price as any;
+
+                let res_:Result<string>=await this.nfcservice.MakePayment(driverid,userid,from,to,time,price);
+                if(res_.success){
+                res.status(200).send("Payment Success");
+                }else{
+                    res.status(401).send("Not enough Money in the wallet");
+                }
+            }else{
+                res.status(401).send("Authorization Required");
+            }
+        });
         
     }
 }
