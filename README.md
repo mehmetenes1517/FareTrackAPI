@@ -6,14 +6,14 @@ If you Setup a Database for API you need to enter the root directory of the proj
 
 after this command you had been created a empty database for api
 
-Then you need to create a '.env' file for the environment variables
+Then you need to create a '.env' file in the project root for the environment variables
 
 VARIABLE | Description
 --- | ---
 PORT | The Port that api will work
 secret_key | The Secret key for the session cookie encription
 
-Create a .env file and asssign values to these variables
+Create a .env file in the root project destination and assign values to these variables
 
 example assignment for the variables 
 
