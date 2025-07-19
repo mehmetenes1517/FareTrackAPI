@@ -76,7 +76,7 @@ Finally you must execute this command to start the api
 /CompanyAPI | /getdrivers | GET | None | YES | Returns all drivers the company have 
 /CompanyAPI | /getdriverlocations | GET | None | YES | Returns all last driver locations
 /CompanyAPI | /gettrips | GET | None | YES | Returns all the trips of the drivers of the company
-/CompanyAPI | /createdriver | POST | username,password,email,busid | NO | Creates a driver belongs to company
+/CompanyAPI | /createdriver | POST | username,password,email,busid | YES | Creates a driver belongs to company
 
 
 
