@@ -72,7 +72,7 @@ Finally you must execute this command to start the api
  Route | SubRoute | Method Type | JSON Object Parameters | Session Required | Description 
 --- | --- | --- | --- | --- |--- 
 /CompanyAPI | /logincompany | POST | username,password | NO | Creates a session cookie and saves it to the browser
-/CompanyAPI | /createcompany | POST | username,password,email,phone | NO | Creates a company account and saves it to database
+/CompanyAPI | /createcompany | POST | companyname,username,password,email,phone | NO | Creates a company account and saves it to database
 /CompanyAPI | /getdrivers | GET | None | YES | Returns all drivers the company have 
 /CompanyAPI | /getdriverlocations | GET | None | YES | Returns all last driver locations
 /CompanyAPI | /gettrips | GET | None | YES | Returns all the trips of the drivers of the company
